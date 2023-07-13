@@ -17,16 +17,20 @@
 <xsl:param name="creationDateTime"/>
 <xsl:param name="nbRows"/>
 	
-	
 <xsl:template match="/"> 
 	<xsl:variable name="fileOID" select="normalize-space($root/@FileOID)"/> 
 	<xsl:variable name="studyOID" select="normalize-space($root/odm:Study/@OID)"/> 
 	<xsl:variable name="metaDataVersionOID" select="normalize-space($root/odm:Study/odm:MetaDataVersion/@OID)"/> 
+	<xsl:variable name="originator" select="normalize-space($root/@Originator)"/> 
 	<xsl:text>{</xsl:text>
 	<xsl:text>&quot;creationDateTime&quot;: &quot;</xsl:text> <xsl:value-of select="$creationDateTime"/> <xsl:text>&quot;, </xsl:text>
 	<xsl:text>&quot;datasetJSONVersion&quot;: &quot;1.0.0&quot;, </xsl:text> 
 	<xsl:text>&quot;fileOID&quot;: &quot;</xsl:text> <xsl:value-of select="$fileOID"/> <xsl:text>.</xsl:text> <xsl:value-of select="$dsName"/> <xsl:text>&quot;, </xsl:text>
-	<xsl:text>&quot;originator&quot;: &quot;UCB&quot;, </xsl:text> 
+	<xsl:if test="$originator">
+		<xsl:text>&quot;originator&quot;: &quot;</xsl:text> 
+		<xsl:value-of select="$originator"/>
+		<xsl:text>&quot;, </xsl:text> 
+	</xsl:if>
     <xsl:for-each select="$root/odm:Study/odm:MetaDataVersion/odm:ItemGroupDef[upper-case(@Name)=upper-case($dsName)]">
         <xsl:variable name="OID" select="@OID"/>
         <xsl:variable name="Name" select="@Name"/>

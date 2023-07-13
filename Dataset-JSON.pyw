@@ -6,22 +6,9 @@ import saxonche
 import datetime
 import json
 import jsonschema
-from pandas import DataFrame
-from pyreadstat import metadata_container
 
 # Global Variable Path
 path = os.path.abspath(".")
-
-'''
-# XSL Stylesheets
-dsjson_stylesheet = os.path.join(path,"Stylesheet\\sas2json.xsl")
-
-# JSON Schema
-with open(os.path.join(path,"Schema\\dataset.schema.json")) as schemajson:
-    schema = schemajson.read()
-schema = json.loads(schema)
-'''
-
 
 # Datetime to Integer Function
 def datetime_to_integer(dt):
@@ -79,25 +66,24 @@ def main():
             if any((define == "", library == "", folder == "")):
                 sg.Popup("Please fill out required fields", title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
 
+            # Check if Dataset-JSON stylesheet exists where it should. 
             elif not (os.path.isfile(os.path.join(path,"Stylesheet\\Dataset-JSON.xsl"))):
-                sg.Popup("Stylesheet not found", title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
+                sg.Popup("Stylesheet Dataset-JSON.xsl file not found. Make sure it is located in a subfolder Stylesheet.", title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
 
+            # Check if Dataset-JSON schema exists where it should. 
             elif not (os.path.isfile(os.path.join(path,"Schema\\dataset.schema.json"))):
-                sg.Popup("Schema not found", title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
-
-
-
+                sg.Popup("Schema dataset.schema.json file not found. Make sure it is located in a subfolder Schema.", title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
 
             # Create Dataset-JSON files    
             else:
-                dsjson_stylesheet = os.path.join(path,"Stylesheet\\Dataset-JSON.xsl")
+                sg.popup_no_wait("Processing....", non_blocking=True, button_type=5, keep_on_top=True, no_titlebar=True, auto_close=True)
 
+                # Load Dataset-JSON Schema
                 with open(os.path.join(path,"Schema\\dataset.schema.json")) as schemajson:
                     schema = schemajson.read()
                 schema = json.loads(schema)
 
-
-                sg.popup_no_wait("Processing....", non_blocking=True, button_type=5, no_titlebar=True, auto_close=True)
+                # Initialize list of files either not JSON compliant with nor compliant with Dataset-JSON schema
                 error_files = []
                 
                 # Build JSON files from SAS/XPT datasets
@@ -118,7 +104,7 @@ def main():
                     xslt.set_parameter("dsName", processor.make_string_value(dsname))
                     xslt.set_parameter("creationDateTime", processor.make_string_value(datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
                     xslt.set_parameter("nbRows", processor.make_integer_value(meta.number_rows))
-                    result = xslt.transform_to_string(source_file=define, stylesheet_file=dsjson_stylesheet)
+                    result = xslt.transform_to_string(source_file=define, stylesheet_file=os.path.join(path,"Stylesheet\\Dataset-JSON.xsl"))
                     json_data = json.loads(result)
                     items = json_data["clinicalData"]["itemGroupData"][dsname]["items"]
                     pairs = {item["name"]: item["type"] for item in items if item["name"] != "ITEMGROUPDATASEQ"}
@@ -170,11 +156,13 @@ def main():
                     if error:
                         error_files.append(file)
 
+                # Pop-up an error window listing all files that are not compliant with either JSON or Dataset-JSON schema
                 if error_files:
                     msgfiles = '\n'.join(error_files)                    
                     sg.Popup("The following JSON files are not compliant with Dataset-JSON schema:\n" + msgfiles, 
                              title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
                     
+                # Pop-up when all files are compliant with Dataset-JSON standard
                 else:
                     sg.Popup("Dataset-JSON files created.", title = "", button_color = "green", custom_text = "  OK  ", button_justification = "center")
 
