@@ -4,6 +4,7 @@ import pandas as pd
 import pyreadstat
 import saxonche
 import datetime
+import time
 import json
 import jsonschema
 
@@ -76,7 +77,7 @@ def main():
 
             # Create Dataset-JSON files    
             else:
-                sg.popup_no_wait("Processing....", non_blocking=True, button_type=5, keep_on_top=True, no_titlebar=True, auto_close=True)
+                sg.popup_no_wait("Processing....", non_blocking=True, button_type=5, keep_on_top=True, no_titlebar=True, auto_close=True, modal=True)
 
                 # Load Dataset-JSON Schema
                 with open(os.path.join(path,"Schema\\dataset.schema.json")) as schemajson:
@@ -158,12 +159,14 @@ def main():
 
                 # Pop-up an error window listing all files that are not compliant with either JSON or Dataset-JSON schema
                 if error_files:
-                    msgfiles = '\n'.join(error_files)                    
+                    msgfiles = '\n'.join(error_files)   
+                    time.sleep(3)                 
                     sg.Popup("The following JSON files are not compliant with Dataset-JSON schema:\n" + msgfiles, 
                              title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
                     
                 # Pop-up when all files are compliant with Dataset-JSON standard
                 else:
+                    time.sleep(3)
                     sg.Popup("Dataset-JSON files created.", title = "", button_color = "green", custom_text = "  OK  ", button_justification = "center")
 
 if __name__ == '__main__':
