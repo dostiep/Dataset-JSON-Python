@@ -19,6 +19,7 @@ The Schema folder contains the Dataset-JSON schema to make sure each file is com
 The Stylesheet folder contains the XSLT stylesheet that is used to read Define.xml information into Dataset-JSON files.
 
 Required Python modules are available in requirements.txt file. You will need to updagre PySimpleGUI module by submitting this line of code: python -m PySimpleGUI.PySimpleGUI upgrade
+
 A pop-up window will appear asking to if you want to update this release of PySimpleGUI. Click Yes for the latest release to be installed.
 
 This is a first draft version and comments are welcomed.
