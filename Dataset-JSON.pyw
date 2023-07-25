@@ -110,7 +110,14 @@ def main():
                         xslt.set_parameter("nbRows", processor.make_integer_value(meta.number_rows))
                         result = xslt.transform_to_string(source_file=define, stylesheet_file=os.path.join(path,"Stylesheet\\Dataset-JSON.xsl"))
                         json_data = json.loads(result)
-                        items = json_data["clinicalData"]["itemGroupData"][dsname]["items"]
+
+                        if "clinicalData" in json_data:
+                            data_key = "clinicalData"
+                        elif "referenceData" in json_data:
+                            data_key = "referenceData"
+
+                        items = json_data[data_key]["itemGroupData"][dsname]["items"]
+
                         pairs = {item["name"]: item["type"] for item in items if item["name"] != "ITEMGROUPDATASEQ"}
 
                         # Extract Dataset-JSON data from each SAS or XPT datasets
@@ -127,7 +134,7 @@ def main():
                                     if isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
                                         records += str(datetime_to_integer(value))
                                     elif type == "string":
-                                        records += '"' + value +  '"' 
+                                        records += json.dumps(value) 
                                     elif type == "integer":
                                         if pd.isna(value):
                                             records += "null"
@@ -139,7 +146,8 @@ def main():
                                         else:
                                             records += str(value)
                                 records += ']'
-                        json_data["clinicalData"]["itemGroupData"][dsname]["itemData"] = json.loads("[" + records + "]")
+
+                        json_data[data_key]["itemGroupData"][dsname]["itemData"] = json.loads("[" + records + "]")
 
                         # Check if JSON file is valid against the Dataset-JSON schema
                         error = False
