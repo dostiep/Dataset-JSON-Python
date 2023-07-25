@@ -25,7 +25,11 @@
 	<xsl:text>{</xsl:text>
 	<xsl:text>&quot;creationDateTime&quot;: &quot;</xsl:text> <xsl:value-of select="$creationDateTime"/> <xsl:text>&quot;, </xsl:text>
 	<xsl:text>&quot;datasetJSONVersion&quot;: &quot;1.0.0&quot;, </xsl:text> 
-	<xsl:text>&quot;fileOID&quot;: &quot;</xsl:text> <xsl:value-of select="$fileOID"/> <xsl:text>.</xsl:text> <xsl:value-of select="$dsName"/> <xsl:text>&quot;, </xsl:text>
+	<xsl:if test="$fileOID">
+		<xsl:text>&quot;fileOID&quot;: &quot;</xsl:text> 
+		<xsl:value-of select="$fileOID"/> 
+		<xsl:text>.</xsl:text> <xsl:value-of select="$dsName"/> <xsl:text>&quot;, </xsl:text>
+	</xsl:if>
 	<xsl:if test="$originator">
 		<xsl:text>&quot;originator&quot;: &quot;</xsl:text> 
 		<xsl:value-of select="$originator"/>
