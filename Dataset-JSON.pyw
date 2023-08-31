@@ -120,60 +120,72 @@ def main():
 
                         pairs = {item["name"]: item["type"] for item in items if item["name"] != "ITEMGROUPDATASEQ"}
 
-                        # Extract Dataset-JSON data from each SAS or XPT datasets
-                        records = ''
-                        if meta.number_rows > 0:
-                            for index, row in df.iterrows():
-                                if index > 0:
-                                    records += ','
-                                records += '[' + str(index + 1)
-                                for column in df.columns:
-                                    type = pairs[column]
-                                    value = row[column]
-                                    records += ','
-                                    if isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
-                                        records += str(datetime_to_integer(value))
-                                    elif type == "string":
-                                        records += json.dumps(value) 
-                                    elif type == "integer":
-                                        if pd.isna(value):
-                                            records += "null"
+
+                        if sorted([col.upper() for col in df.columns.tolist()]) == sorted([item["name"].upper() for item in items if item["name"] != "ITEMGROUPDATASEQ"]):
+
+                            # Extract Dataset-JSON data from each SAS or XPT datasets
+                            records = ''
+                            if meta.number_rows > 0:
+                                for index, row in df.iterrows():
+                                    if index > 0:
+                                        records += ','
+                                    records += '[' + str(index + 1)
+                                    for column in df.columns:
+                                        type = pairs[column]
+                                        value = row[column]
+                                        records += ','
+                                        if isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
+                                            records += str(datetime_to_integer(value))
+                                        elif type == "string":
+                                            records += json.dumps(value) 
+                                        elif type == "integer":
+                                            if pd.isna(value):
+                                                records += "null"
+                                            elif value == "":
+                                                records += "null"
+                                            else:
+                                                #records += str(int(value))
+                                                records += json.dumps(int(value))
                                         else:
-                                            records += str(int(value))
-                                    else:
-                                        if pd.isna(value):
-                                            records += "null"
-                                        else:
-                                            records += str(value)
-                                records += ']'
+                                            if pd.isna(value):
+                                                records += "null"
+                                            else:
+                                                #records += str(value)
+                                                records += json.dumps(value) 
+                                    records += ']'
 
-                        json_data[data_key]["itemGroupData"][dsname]["itemData"] = json.loads("[" + records + "]")
+                            json_data[data_key]["itemGroupData"][dsname]["itemData"] = json.loads("[" + records + "]")
 
-                        # Check if JSON file is valid against the Dataset-JSON schema
-                        error = False
-                        try:
-                            jsonschema.validate(json_data, schema)
-                        except:
-                            error = True
-
-                        # Save Dataset-JSON files
-                        if not error:
+                            # Check if JSON file is valid against the Dataset-JSON schema
+                            error = False
                             try:
-                                with open(os.path.join(folder,dsname)+".json", "w") as json_file:
-                                    json.dump(json_data, json_file)
+                                jsonschema.validate(json_data, schema)
                             except:
                                 error = True
 
-                        # Add the SAS or XPT files that are not compliant with either JSON or Dataset-JSON schema
-                        if error:
+                            # Save Dataset-JSON files
+                            if not error:
+                                try:
+                                    with open(os.path.join(folder,dsname)+".json", "w") as json_file:
+                                        json.dump(json_data, json_file)
+                                except:
+                                    error = True
+
+                            # Add the SAS or XPT files that are not compliant with either JSON or Dataset-JSON schema
+                            if error:
+                                error_files.append(file)
+
+                        
+                        else:
                             error_files.append(file)
 
                     # Pop-up an error window listing all files that are not compliant with either JSON or Dataset-JSON schema
                     if error_files:
                         msgfiles = '\n'.join(error_files)   
                         time.sleep(3)                 
-                        sg.Popup("The following JSON files are not compliant with Dataset-JSON schema:\n" + msgfiles, 
+                        sg.Popup("The following JSON files are either not compliant with Dataset-JSON schema or dataset contents is not aligned with Define.xml metadata:\n" + msgfiles, 
                                 title = "", button_color = "red", custom_text = " Error ", button_justification = "center")
+
                         
                     # Pop-up when all files are compliant with Dataset-JSON standard
                     else:
